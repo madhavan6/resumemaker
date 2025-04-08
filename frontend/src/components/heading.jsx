@@ -78,10 +78,21 @@ const Heading = () => {
         navigate('/education/intro');
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to save personal info');
+        if (response.status === 500) {
+          setError('Server error. Please try again later.');
+        } else if (response.status === 404) {
+          setError('Server not found. Please check if the backend server is running.');
+        } else {
+          setError(errorData.error || 'Failed to save personal info');
+        }
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      if (error.message === 'Failed to fetch') {
+        setError('Cannot connect to the server. Please make sure the backend server is running on http://localhost:5000');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+      console.error('Error:', error);
     } finally {
       setIsLoading(false);
     }

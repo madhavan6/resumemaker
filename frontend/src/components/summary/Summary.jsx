@@ -15,6 +15,7 @@ function Summary() {
     const [editorContent, setEditorContent] = useState('');
     const [editorHistory, setEditorHistory] = useState(['']);
     const [historyIndex, setHistoryIndex] = useState(0);
+    const [selectedContentMap, setSelectedContentMap] = useState({});
     const editorRef = useRef(null);
     
     const jobDescriptions = [
@@ -104,37 +105,6 @@ function Summary() {
         setHistoryIndex(0);
     }, []);
     
-    // Listen for new selections
-    useEffect(() => {
-        const newlySelectedId = selectedSummaries.length > 0 ? 
-            selectedSummaries[selectedSummaries.length - 1] : null;
-        
-        if (newlySelectedId) {
-            const selectedJob = jobDescriptions.find(job => job.id === newlySelectedId);
-            if (selectedJob) {
-                // Format content to ensure it's wrapped in paragraphs
-                const formattedContent = formatContentWithParagraphs(selectedJob.description);
-                
-                // If there's already content in the editor, append the new content
-                // Otherwise, set it as the initial content
-                if (editorContent && editorContent.trim() !== '') {
-                    const newContent = editorContent + '<div class="summary-divider"></div>' + formattedContent;
-                    setEditorContent(newContent);
-                    
-                    // Add to history
-                    const newHistory = editorHistory.slice(0, historyIndex + 1);
-                    setEditorHistory([...newHistory, newContent]);
-                    setHistoryIndex(newHistory.length);
-                } else {
-                    setEditorContent(formattedContent);
-                    // Reset history when setting initial content
-                    setEditorHistory([formattedContent]);
-                    setHistoryIndex(0);
-                }
-            }
-        }
-    }, [selectedSummaries]);
-    
     // Format plain text into paragraphs for proper HTML rendering
     const formatContentWithParagraphs = (text) => {
         if (!text) return '';
@@ -170,17 +140,56 @@ function Summary() {
         // Check if the summary is already selected
         if (selectedSummaries.includes(id)) {
             // If clicking on an already selected summary, deselect it
-            setSelectedSummaries(selectedSummaries.filter(summaryId => summaryId !== id));
+            const newSelectedSummaries = selectedSummaries.filter(summaryId => summaryId !== id);
+            setSelectedSummaries(newSelectedSummaries);
             
-            // If we're deselecting all summaries, clear the editor
-            if (selectedSummaries.length === 1) {
+            // Remove the content from the map
+            const newContentMap = { ...selectedContentMap };
+            delete newContentMap[id];
+            setSelectedContentMap(newContentMap);
+            
+            // Update editor content based on remaining selections
+            if (newSelectedSummaries.length === 0) {
                 setEditorContent('');
                 setEditorHistory(['']);
+                setHistoryIndex(0);
+            } else {
+                // Rebuild the content from remaining selections
+                const newContent = newSelectedSummaries
+                    .map(selectedId => selectedContentMap[selectedId])
+                    .join('<div class="summary-divider"></div>');
+                
+                setEditorContent(newContent);
+                setEditorHistory([newContent]);
                 setHistoryIndex(0);
             }
         } else {
             // If selecting a new summary, add it to the list of selected summaries
-            setSelectedSummaries([...selectedSummaries, id]);
+            const newSelectedSummaries = [...selectedSummaries, id];
+            setSelectedSummaries(newSelectedSummaries);
+            
+            // Get the newly selected job
+            const selectedJob = jobDescriptions.find(job => job.id === id);
+            if (selectedJob) {
+                // Format the content for the new selection
+                const formattedContent = formatContentWithParagraphs(selectedJob.description);
+                
+                // Update the content map
+                const newContentMap = {
+                    ...selectedContentMap,
+                    [id]: formattedContent
+                };
+                setSelectedContentMap(newContentMap);
+                
+                // Update the editor content
+                const newContent = newSelectedSummaries
+                    .map(selectedId => newContentMap[selectedId])
+                    .join('<div class="summary-divider"></div>');
+                
+                setEditorContent(newContent);
+                setEditorHistory([newContent]);
+                setHistoryIndex(0);
+            }
         }
     };
     
