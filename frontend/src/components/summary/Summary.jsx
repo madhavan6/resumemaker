@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar';
 import './Summary.css'
-import './Summarytips.css'
+
 import { FaSearch, FaPlus, FaCheck, FaTimes, FaBold, FaItalic, FaUnderline, FaUndo, FaRedo } from "react-icons/fa";
 
 function Summary() {
@@ -301,7 +301,7 @@ function Summary() {
     };
     
     return (
-        <div className="tips-container">
+        <div className="tips-container-summary">
             <Sidebar activeStep={5} />
             <button onClick={() => navigate('/Summarys/tips')} className="back-button">
                 <span>←</span>Go Back

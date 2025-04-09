@@ -1,5 +1,10 @@
 body {
-    overflow-y: auto; /* Enable page scrolling */
+    overflow-y: auto;
+    margin-left: 300px; /* Enable page scrolling */
+}
+
+body .summarytips-page-container {
+    margin-left: 250px !important;
 }
 
 .back-button {
